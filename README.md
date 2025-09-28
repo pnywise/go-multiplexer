@@ -455,6 +455,36 @@ We welcome contributions to the Go Multiplexer Library! To contribute:
 
 5. Submit a pull request with a clear description of your changes.
 
+## Versioning and Releases
+
+This project follows [Semantic Versioning](https://semver.org/). The version format is `vMAJOR.MINOR.PATCH`:
+
+- MAJOR version for incompatible API changes
+- MINOR version for backwards-compatible functionality additions
+- PATCH version for backwards-compatible bug fixes
+
+### Release Process
+
+1. Update version constants in `multiplexer/version.go`
+2. Update CHANGELOG.md with the new version's changes
+3. Create and push a new tag:
+   ```bash
+   git tag v1.2.3
+   git push origin v1.2.3
+   ```
+4. GitHub Actions will automatically:
+   - Run tests
+   - Create a GitHub release
+   - Update the Go package registry
+
+### Using a Specific Version
+
+To use a specific version in your project:
+
+```bash
+go get github.com/pnywise/go-multiplexer@v1.2.3
+```
+
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
