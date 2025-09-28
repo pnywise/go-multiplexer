@@ -1,4 +1,4 @@
-module github.com/pnywise/multiplexer
+module github.com/pnywise/go-multiplexer
 
 go 1.25.1
 
