@@ -3,10 +3,10 @@ package protocols
 import (
 	"context"
 	"errors"
-	"log"
 	"net"
 	"sync"
 
+	"github.com/pnywise/go-multiplexer/multiplexer"
 	"github.com/soheilhy/cmux"
 )
 
@@ -16,7 +16,7 @@ type TCPHandler func(conn net.Conn)
 // TCPProtocol implements the multiplexer.Protocol interface for raw TCP.
 type TCPProtocol struct {
 	Handler TCPHandler
-	Logger  *log.Logger
+	Logger  multiplexer.Logger
 }
 
 // Matcher returns the cmux.Matcher for any connection not matched by other protocols.

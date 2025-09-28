@@ -3,10 +3,10 @@ package protocols
 import (
 	"context"
 	"errors"
-	"log"
 	"net"
 	"sync"
 
+	"github.com/pnywise/go-multiplexer/multiplexer"
 	"github.com/soheilhy/cmux"
 	"google.golang.org/grpc"
 )
@@ -14,7 +14,7 @@ import (
 // GRPCProtocol implements the multiplexer.Protocol interface for gRPC.
 type GRPCProtocol struct {
 	Server *grpc.Server
-	Logger *log.Logger
+	Logger multiplexer.Logger
 }
 
 // Matcher returns the cmux.Matcher for gRPC.
@@ -33,7 +33,7 @@ func (p *GRPCProtocol) Serve(ctx context.Context, wg *sync.WaitGroup, l net.List
 	}()
 
 	p.Logger.Println("gRPC server starting...")
-	if err := p.Server.Serve(l); err!= nil &&!errors.Is(err, grpc.ErrServerStopped) {
+	if err := p.Server.Serve(l); err != nil && !errors.Is(err, grpc.ErrServerStopped) {
 		p.Logger.Printf("gRPC server failed: %v", err)
 	}
 	p.Logger.Println("gRPC server stopped.")

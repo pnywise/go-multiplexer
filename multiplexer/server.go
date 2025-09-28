@@ -13,12 +13,20 @@ import (
 	"github.com/soheilhy/cmux"
 )
 
+// Logger is an interface that defines the logging methods used by the server.
+// This interface can be implemented by any logging library.
+type Logger interface {
+	Printf(format string, v ...any)
+	Println(v ...any)
+	Fatalf(format string, v ...any)
+}
+
 // Server is a single-port, multi-protocol server. It is configured by
 // registering one or more Protocol implementations.
 type Server struct {
 	addr      string
 	protocols []Protocol
-	logger    *log.Logger
+	logger    Logger
 }
 
 // New creates a new multiplexer server that listens on the given address.
@@ -31,7 +39,8 @@ func New(addr string) *Server {
 }
 
 // WithLogger sets a custom logger for the server.
-func (s *Server) WithLogger(logger *log.Logger) *Server {
+// The logger must implement the Logger interface.
+func (s *Server) WithLogger(logger Logger) *Server {
 	s.logger = logger
 	return s
 }

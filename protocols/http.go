@@ -3,19 +3,19 @@ package protocols
 import (
 	"context"
 	"errors"
-	"log"
 	"net"
 	"net/http"
 	"sync"
 	"time"
 
+	"github.com/pnywise/go-multiplexer/multiplexer"
 	"github.com/soheilhy/cmux"
 )
 
 // HTTPProtocol implements the multiplexer.Protocol interface for HTTP/1.1 and WebSockets.
 type HTTPProtocol struct {
 	Server *http.Server
-	Logger *log.Logger
+	Logger multiplexer.Logger
 }
 
 // Matcher returns the cmux.Matcher for HTTP/1.1.
