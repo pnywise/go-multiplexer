@@ -1,3 +1,7 @@
+// Package protocols_test provides comprehensive testing for the HTTP protocol
+// implementation, covering standard HTTP/1.1 requests and WebSocket connections.
+// Tests verify correct protocol matching, request handling, and server lifecycle
+// management.
 package protocols
 
 import (
@@ -19,15 +23,31 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// mockListener is a net.Listener that can be configured to return an error on Accept.
-// This is useful for testing server failure scenarios.
+// mockHttpListener implements a testable net.Listener with configurable
+// error injection capabilities. It enables testing of various server
+// failure scenarios and shutdown behaviors.
+//
+// Features:
+// - Configurable Accept() error injection
+// - Controlled shutdown behavior
+// - Thread-safe operations
+// - Event signaling through channels
 type mockHttpListener struct {
-	net.Listener
-	closeOnce sync.Once
-	closeCh   chan struct{}
-	acceptErr error // The error to return on Accept()
+	net.Listener               // Embedded real listener
+	closeOnce    sync.Once     // Ensures single Close() execution
+	closeCh      chan struct{} // Signals listener closure
+	acceptErr    error         // Configurable Accept() error
 }
 
+// newMockHttpListener creates a new mock HTTP listener with specified
+// error behavior for testing server failure scenarios.
+//
+// Parameters:
+//   - l: The underlying net.Listener to wrap
+//   - acceptErr: Optional error to return on Accept()
+//
+// Returns:
+//   - *mockHttpListener: A configured mock listener for testing
 func newMockHttpListener(l net.Listener, acceptErr error) *mockHttpListener {
 	return &mockHttpListener{
 		Listener:  l,
@@ -36,6 +56,12 @@ func newMockHttpListener(l net.Listener, acceptErr error) *mockHttpListener {
 	}
 }
 
+// Accept implements net.Listener.Accept() with added testing capabilities
+// such as error injection and closure detection.
+//
+// Returns:
+//   - net.Conn: An accepted connection, or nil on error
+//   - error: Either the injected error, closure error, or underlying Accept error
 func (m *mockHttpListener) Accept() (net.Conn, error) {
 	select {
 	case <-m.closeCh:
@@ -48,6 +74,11 @@ func (m *mockHttpListener) Accept() (net.Conn, error) {
 	}
 }
 
+// Close implements thread-safe listener closure with proper cleanup
+// and notification of all goroutines waiting on closeCh.
+//
+// Returns:
+//   - error: Any error from closing the underlying listener
 func (m *mockHttpListener) Close() error {
 	m.closeOnce.Do(func() {
 		close(m.closeCh)
@@ -55,7 +86,15 @@ func (m *mockHttpListener) Close() error {
 	return m.Listener.Close()
 }
 
-// setupTestHTTPServer creates an http.Server with basic handlers for testing.
+// setupTestHTTPServer creates and configures an http.Server instance
+// with test endpoints for both HTTP and WebSocket testing.
+//
+// Endpoints:
+// - GET /hello: Returns "world" (HTTP/1.1)
+// - GET /ws: WebSocket endpoint with echo functionality
+//
+// Returns:
+//   - *http.Server: Configured server ready for testing
 func setupTestHTTPServer() *http.Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /hello", func(w http.ResponseWriter, r *http.Request) {

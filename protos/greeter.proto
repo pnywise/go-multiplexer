@@ -1,3 +1,11 @@
+// Protocol buffer definition for the Greeter service, which demonstrates
+// basic gRPC functionality in the multiplexer example.
+//
+// This file defines:
+// - A simple Greeter service with a single RPC method
+// - Request and response message types
+// - Go package configuration for code generation
+
 syntax = "proto3";
 
 package protos;

@@ -1,3 +1,6 @@
+// Package protocols_test provides comprehensive testing for the gRPC protocol
+// implementation. Tests cover protocol matching, server lifecycle management,
+// and error handling scenarios.
 package protocols
 
 import (
@@ -16,15 +19,30 @@ import (
 	"google.golang.org/grpc/interop/grpc_testing"
 )
 
-// mockListener is a net.Listener that can be configured to return an error on Accept.
-// This is useful for testing server failure scenarios.
+// mockGrpcListener implements a testable net.Listener with configurable
+// error injection and shutdown behavior for gRPC connection testing.
+//
+// Features:
+// - Configurable Accept() error injection
+// - Controlled shutdown behavior
+// - Thread-safe operations
+// - Event signaling through channels
 type mockGrpcListener struct {
-	net.Listener
-	closeOnce sync.Once
-	closeCh   chan struct{}
-	acceptErr error // The error to return on Accept()
+	net.Listener               // Embedded real listener
+	closeOnce    sync.Once     // Ensures single Close() execution
+	closeCh      chan struct{} // Signals listener closure
+	acceptErr    error         // Configurable Accept() error
 }
 
+// newMockGrpcListener creates a new mock gRPC listener with specified
+// error behavior for testing server failure scenarios.
+//
+// Parameters:
+//   - l: The underlying net.Listener to wrap
+//   - acceptErr: Optional error to return on Accept()
+//
+// Returns:
+//   - *mockGrpcListener: A configured mock listener for testing
 func newMockGrpcListener(l net.Listener, acceptErr error) *mockGrpcListener {
 	return &mockGrpcListener{
 		Listener:  l,
@@ -33,6 +51,12 @@ func newMockGrpcListener(l net.Listener, acceptErr error) *mockGrpcListener {
 	}
 }
 
+// Accept implements net.Listener.Accept() with added testing capabilities
+// such as error injection and closure detection.
+//
+// Returns:
+//   - net.Conn: An accepted connection, or nil on error
+//   - error: Either the injected error, closure error, or underlying Accept error
 func (m *mockGrpcListener) Accept() (net.Conn, error) {
 	select {
 	case <-m.closeCh:
@@ -45,6 +69,11 @@ func (m *mockGrpcListener) Accept() (net.Conn, error) {
 	}
 }
 
+// Close implements thread-safe listener closure with proper cleanup
+// and notification of all goroutines waiting on closeCh.
+//
+// Returns:
+//   - error: Any error from closing the underlying listener
 func (m *mockGrpcListener) Close() error {
 	m.closeOnce.Do(func() {
 		close(m.closeCh)
@@ -52,7 +81,8 @@ func (m *mockGrpcListener) Close() error {
 	return m.Listener.Close()
 }
 
-// setupTestServer creates a new gRPC server and registers a test service.
+// setupTestServer creates and configures a new gRPC server with a test
+// service for integration testing.
 func setupTestServer() *grpc.Server {
 	server := grpc.NewServer()
 	grpc_testing.RegisterTestServiceServer(server, &grpc_testing.UnimplementedTestServiceServer{})

@@ -1,3 +1,18 @@
+// Package main provides a comprehensive example of using the multiplexer package
+// to serve multiple protocols (HTTP, WebSocket, gRPC, and raw TCP) on a single port.
+//
+// This example demonstrates:
+// - Setting up a multiplexer server
+// - Configuring multiple protocol handlers
+// - Protocol-specific request handling
+// - Proper logging and error handling
+// - Graceful shutdown handling
+//
+// Supported Protocols:
+// 1. HTTP/1.1 (standard web requests)
+// 2. WebSocket (bidirectional communication)
+// 3. gRPC (RPC over HTTP/2)
+// 4. Raw TCP (fallback protocol)
 package main
 
 import (
@@ -19,12 +34,21 @@ import (
 
 // --- gRPC Service Implementation ---
 
-// greeterServer implements the gRPC Greeter service.
+// greeterServer implements the gRPC Greeter service, providing a simple
+// demonstration of gRPC functionality within the multiplexed server.
 type greeterServer struct {
 	pb.UnimplementedGreeterServer
 }
 
-// SayHello is the implementation of the RPC method.
+// SayHello implements the gRPC service method that responds to greeting requests.
+//
+// Parameters:
+//   - ctx: Request context for deadline and cancellation
+//   - in: The incoming request containing the caller's name
+//
+// Returns:
+//   - *pb.HelloReply: Response containing the greeting message
+//   - error: Any error that occurred during processing
 func (s *greeterServer) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloReply, error) {
 	log.Printf("gRPC request received: Name=%s", in.GetName())
 	return &pb.HelloReply{Message: "Hello, " + in.GetName() + "!"}, nil
@@ -32,6 +56,8 @@ func (s *greeterServer) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.
 
 // --- HTTP and WebSocket Handler ---
 
+// createHTTPMux sets up an HTTP request multiplexer with handlers for both
+// standard HTTP requests and WebSocket connections.
 func createHTTPMux() *http.ServeMux {
 	mux := http.NewServeMux()
 
